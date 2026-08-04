@@ -205,21 +205,136 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   text-transform:uppercase;
   color:var(--espresso);
   transition:all .5s var(--ease-soft);
+  display:none; /* hidden by default — shown only above 860px */
 }
 .nav.is-solid .nav__cta{ color:var(--espresso); border-color:var(--espresso); }
 .nav__cta:hover{ background:var(--copper); border-color:var(--copper); color:var(--warm-white); }
 
-.nav__toggle{ display:none; }
+/* Hamburger toggle — 3 bars that morph into an X */
+.nav__toggle{
+  display:none;
+  width:44px; height:44px;
+  min-width:44px; min-height:44px;
+  max-width:44px; max-height:44px;
+  border-radius:50%;
+  border:1px solid currentColor;
+  align-items:center; justify-content:center;
+  background:none;
+  color:var(--espresso);
+  position:relative;
+  flex-shrink:0;
+  padding:0;
+  margin:0;
+  line-height:1;
+  transition:color .5s var(--ease-soft), border-color .5s var(--ease-soft);
+  z-index:51;
+}
+.nav__toggle-bar{
+  position:absolute;
+  left:50%; top:50%;
+  width:18px; height:1.5px;
+  background:currentColor;
+  border-radius:1px;
+  transition:transform .35s var(--ease-out), opacity .25s;
+}
+.nav__toggle-bar:nth-child(1){ transform:translate(-50%, calc(-50% - 6px)); }
+.nav__toggle-bar:nth-child(2){ transform:translate(-50%, -50%); }
+.nav__toggle-bar:nth-child(3){ transform:translate(-50%, calc(-50% + 6px)); }
+
+/* Morph to X when open */
+.nav.is-open .nav__toggle-bar:nth-child(1){ transform:translate(-50%, -50%) rotate(45deg); }
+.nav.is-open .nav__toggle-bar:nth-child(2){ opacity:0; }
+.nav.is-open .nav__toggle-bar:nth-child(3){ transform:translate(-50%, -50%) rotate(-45deg); }
+
+/* Drawer backdrop overlay */
+.nav__drawer-backdrop{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(34,17,9,0.3);
+  z-index:48;
+  opacity:0;
+  transition:opacity .4s var(--ease-soft);
+  -webkit-backdrop-filter:blur(2px);
+  backdrop-filter:blur(2px);
+}
+.nav.is-open .nav__drawer-backdrop{
+  display:block;
+  opacity:1;
+}
+
+/* Drawer panel — slides in from right */
+.nav__drawer{
+  position:fixed;
+  top:0; right:0;
+  width:min(340px, 85vw);
+  height:100%;
+  height:100dvh;
+  background:var(--warm-white);
+  z-index:49;
+  transform:translateX(100%);
+  transition:transform .45s var(--ease-out);
+  display:flex;
+  flex-direction:column;
+  padding:100px 36px 40px;
+  overflow-y:auto;
+  box-shadow:-20px 0 60px -20px rgba(34,17,9,0.2);
+}
+.nav.is-open .nav__drawer{
+  transform:translateX(0);
+}
+.nav__drawer-links{
+  list-style:none;
+  margin:0; padding:0;
+  display:flex;
+  flex-direction:column;
+}
+.nav__drawer-links li{
+  border-bottom:1px solid var(--line);
+}
+.nav__drawer-links a{
+  display:block;
+  padding:18px 0;
+  font-size:14px;
+  font-weight:500;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--espresso);
+  transition:color .3s;
+}
+.nav__drawer-links a:hover{ color:var(--copper); }
+
+.nav__drawer-cta{
+  margin-top:32px;
+  text-align:center;
+  padding:15px 30px;
+  border:1px solid var(--espresso);
+  border-radius:100px;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--espresso);
+  transition:all .4s var(--ease-soft);
+}
+.nav__drawer-cta:hover{
+  background:var(--copper);
+  border-color:var(--copper);
+  color:var(--warm-white);
+}
+
+@media (min-width: 861px){
+  .nav__cta{ display:inline-flex; }
+}
 
 @media (max-width: 860px){
   .nav__links{ display:none; }
-  .nav__toggle{
-    display:flex; width:38px; height:38px;
-    border-radius:50%; border:1px solid currentColor;
-    align-items:center; justify-content:center;
-    background:none; color:var(--espresso);
-  }
-  .nav.is-solid .nav__toggle{ color:var(--espresso); }
+  .nav__toggle{ display:flex; }
+}
+
+/* Lock body scroll when drawer is open */
+body.nav-open{
+  overflow:hidden;
 }
 
 /* ============================================================
@@ -1119,9 +1234,24 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
     <li><a href="#contact">Contact</a></li>
   </ul>
   <a href="#location" class="nav__cta">Visit Us</a>
-  <button class="nav__toggle" aria-label="Open menu">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 4h14M1 8h14M1 12h14"/></svg>
+  <button class="nav__toggle" aria-label="Open menu" aria-expanded="false" aria-controls="navDrawer">
+    <span class="nav__toggle-bar"></span>
+    <span class="nav__toggle-bar"></span>
+    <span class="nav__toggle-bar"></span>
   </button>
+
+  <!-- Mobile drawer -->
+  <div class="nav__drawer-backdrop" id="navDrawerBackdrop"></div>
+  <div class="nav__drawer" id="navDrawer" role="dialog" aria-label="Navigation menu">
+    <ul class="nav__drawer-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#menu">Menu</a></li>
+      <li><a href="#reviews">Reviews</a></li>
+      <li><a href="#location">Location</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#location" class="nav__drawer-cta">Visit Us</a>
+  </div>
 </nav>
 
 <!-- ============================================================
@@ -1564,6 +1694,53 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       }
     });
   }
+
+  /* ---------------------------------------------------------
+     MOBILE NAV DRAWER
+  --------------------------------------------------------- */
+  const toggle = nav.querySelector('.nav__toggle');
+  const backdrop = document.getElementById('navDrawerBackdrop');
+  const drawerLinks = nav.querySelectorAll('.nav__drawer-links a, .nav__drawer-cta');
+
+  function openDrawer(){
+    nav.classList.add('is-open');
+    document.body.classList.add('nav-open');
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Close menu');
+  }
+  function closeDrawer(){
+    nav.classList.remove('is-open');
+    document.body.classList.remove('nav-open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open menu');
+  }
+
+  toggle.addEventListener('click', () => {
+    nav.classList.contains('is-open') ? closeDrawer() : openDrawer();
+  });
+  backdrop.addEventListener('click', closeDrawer);
+
+  // Close drawer when a link inside it is clicked
+  drawerLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      closeDrawer();
+    });
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape' && nav.classList.contains('is-open')){
+      closeDrawer();
+      toggle.focus();
+    }
+  });
+
+  // Close drawer if resized past mobile breakpoint
+  window.addEventListener('resize', () => {
+    if(window.innerWidth > 860 && nav.classList.contains('is-open')){
+      closeDrawer();
+    }
+  });
 
   /* ---------------------------------------------------------
      VIDEO REEL — scroll-scrubbed frame sequence (Canvas)

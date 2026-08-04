@@ -313,7 +313,7 @@ const CinematicPlayer = (() => {
   }
 
   /**
-   * Draw frame to canvas with cover sizing
+   * Draw frame to canvas — fills entire viewport, full frame visible
    */
   function drawFrame(index) {
     if (!canvas || !ctx || !frameCache[index]) {
@@ -336,24 +336,34 @@ const CinematicPlayer = (() => {
 
     console.log(`[CinematicPlayer] drawFrame(${index}): img=${img.width}x${img.height}, canvas=${canvasWidth}x${canvasHeight}, dpr=${dpr}`);
 
-    // Calculate cover sizing (like object-fit: cover)
-    const imgAspect = img.width / img.height;
-    const canvasAspect = canvasWidth / canvasHeight;
-
+    // Responsive sizing: contain on mobile (full video visible), fill on desktop
+    const isMobile = canvasWidth < 860;
     let drawWidth, drawHeight, drawX, drawY;
 
-    if (imgAspect > canvasAspect) {
-      // Image is wider - fit height, crop width
-      drawHeight = canvasHeight;
-      drawWidth = drawHeight * imgAspect;
-      drawX = (canvasWidth - drawWidth) / 2;
-      drawY = 0;
+    if (isMobile) {
+      // Contain mode — show complete video frame, centered with letterboxing
+      const imgAspect = img.width / img.height;
+      const canvasAspect = canvasWidth / canvasHeight;
+
+      if (imgAspect > canvasAspect) {
+        // Video is wider — fit to width, center vertically
+        drawWidth = canvasWidth;
+        drawHeight = drawWidth / imgAspect;
+        drawX = 0;
+        drawY = (canvasHeight - drawHeight) / 2;
+      } else {
+        // Video is taller — fit to height, center horizontally
+        drawHeight = canvasHeight;
+        drawWidth = drawHeight * imgAspect;
+        drawX = (canvasWidth - drawWidth) / 2;
+        drawY = 0;
+      }
     } else {
-      // Image is taller - fit width, crop height
+      // Desktop: fill entire canvas
       drawWidth = canvasWidth;
-      drawHeight = drawWidth / imgAspect;
+      drawHeight = canvasHeight;
       drawX = 0;
-      drawY = (canvasHeight - drawHeight) / 2;
+      drawY = 0;
     }
 
     console.log(`[CinematicPlayer] drawFrame: drawing at ${drawX},${drawY} size ${drawWidth}x${drawHeight}`);
