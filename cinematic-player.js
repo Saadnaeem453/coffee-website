@@ -313,7 +313,7 @@ const CinematicPlayer = (() => {
   }
 
   /**
-   * Draw frame to canvas — fills entire viewport, full frame visible
+   * Draw frame to canvas with cover sizing
    */
   function drawFrame(index) {
     if (!canvas || !ctx || !frameCache[index]) {
@@ -336,23 +336,24 @@ const CinematicPlayer = (() => {
 
     console.log(`[CinematicPlayer] drawFrame(${index}): img=${img.width}x${img.height}, canvas=${canvasWidth}x${canvasHeight}, dpr=${dpr}`);
 
-    // Contain mode — show complete video frame without stretching
+    // Calculate cover sizing (like object-fit: cover)
     const imgAspect = img.width / img.height;
     const canvasAspect = canvasWidth / canvasHeight;
+
     let drawWidth, drawHeight, drawX, drawY;
 
     if (imgAspect > canvasAspect) {
-      // Video is wider — fit to width, center vertically
-      drawWidth = canvasWidth;
-      drawHeight = drawWidth / imgAspect;
-      drawX = 0;
-      drawY = (canvasHeight - drawHeight) / 2;
-    } else {
-      // Video is taller — fit to height, center horizontally
+      // Image is wider - fit height, crop width
       drawHeight = canvasHeight;
       drawWidth = drawHeight * imgAspect;
       drawX = (canvasWidth - drawWidth) / 2;
       drawY = 0;
+    } else {
+      // Image is taller - fit width, crop height
+      drawWidth = canvasWidth;
+      drawHeight = drawWidth / imgAspect;
+      drawX = 0;
+      drawY = (canvasHeight - drawHeight) / 2;
     }
 
     console.log(`[CinematicPlayer] drawFrame: drawing at ${drawX},${drawY} size ${drawWidth}x${drawHeight}`);
